@@ -1,0 +1,27 @@
+name = "blueboxd"
+main = "cineclub_bundled.js"
+compatibility_date = "2024-11-01"
+
+# Public origin shown in OAuth client metadata
+[vars]
+PUBLIC_ORIGIN = "https://your-domain.example"
+
+# KV namespace for caching + discovery feed
+# create with: wrangler kv namespace create CC_KV
+[[kv_namespaces]]
+binding = "CC_KV"
+id = "YOUR_KV_NAMESPACE_ID"
+
+# D1 database for telemetry, consent log, takedowns
+# create with: wrangler d1 create blueboxd-social
+[[d1_databases]]
+binding = "CC_SOCIAL"
+database_name = "blueboxd-social"
+database_id = "YOUR_D1_DATABASE_ID"
+
+# Secrets are NOT set here. Use:
+#   wrangler secret put BLUEBOXD_APP_PASSWORD
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put CLIENT_PRIVATE_JWK
+#   wrangler secret put SCRAMBLEMEBOT_TOKEN   (optional, alerts)
+#   wrangler secret put PETE_CHAT_ID          (optional, alerts)
