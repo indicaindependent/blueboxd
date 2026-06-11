@@ -316,7 +316,7 @@ async function verifySid(secret, signed) {
 }
 
 // records.js
-var OWNER_DID = "did:plc:YOUR_OWNER_DID"; // ← self-hosters: set to your Bluesky host/owner account DID
+var OWNER_DID = "did:plc:YOUR_OWNER_DID"; // blueboxd.bsky.social — Pete's host/owner account
 var NSID = {
   library: "uk.osintnet.cineclub.library",
   watch: "uk.osintnet.cineclub.watch",
@@ -521,7 +521,7 @@ async function friendsWatching(env, followDids, { days = 60, limit = 30 } = {}) 
 
 // party.js
 var HOST_HANDLE = "blueboxd.bsky.social";
-var HOST_PDS = "https://YOUR-PDS.host.bsky.network"; // ← self-hosters: your PDS endpoint
+var HOST_PDS = "https://YOUR-PDS.host.bsky.network";
 var APPVIEW = "https://public.api.bsky.app";
 async function hostSession(env) {
   const cached = await env.CC_KV.get("host:sess", "json");
@@ -969,7 +969,7 @@ footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--mut);fon
 .fallback{background:var(--well);border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--mut);font-size:14px;margin:18px 0}
 .fallback a{font-weight:600}
 .about .hero h1{font-size:24px}
-.iim{margin-top:10px;overflow-x:auto}
+.iim{margin-top:10px;overflow-x:auto}.iimbadge{display:block;margin-top:12px;max-width:420px}.iimbadge img{width:100%;height:auto;border-radius:12px;display:block;box-shadow:0 4px 18px rgba(0,0,0,.25)}
 .iim img{max-width:100%;height:auto;border-radius:10px}
 .tipwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .qr{background:#fff;padding:10px;border-radius:14px;border:1px solid var(--line);box-shadow:var(--shadow);flex:0 0 auto}
@@ -1622,7 +1622,7 @@ async function aboutPage(){
 
     <div class="rail"><h2>🛡️ Independent & ad-free</h2>
     <p class="muted">Blueboxd is built and run by <a href="https://osintnet.uk" target="_blank" rel="noopener">Indica Independent</a> — independent OSINT &amp; open tooling, in the VPDLNY tradition: information serves people, never the other way around. No trackers, no data sale, no dark patterns.</p>
-    <div class="iim"><img loading="lazy" alt="Indica Independent — open-source contributions" src="https://trophy.osintnet.uk/?username=indicaindependent"></div></div>
+    <a class="iimbadge" href="https://osintnet.uk" target="_blank" rel="noopener" title="Created with Creative Clarity — a unique badge on every visit"><img loading="lazy" alt="Created with Creative Clarity — Indica Independent Media" width="400" height="200" src="https://badge.osintnet.uk/badge.svg?dynamic"></a></div>
 
     <div class="rail"><h2>⚡ Support the project</h2>
     <p class="muted">Blueboxd is free and always will be. If it brought you a good night in, a tip keeps the lights on — no strings.</p>

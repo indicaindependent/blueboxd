@@ -3,6 +3,11 @@
 All notable changes to Blueboxd are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.0.1] - 2026-06-11
+
+### Changed
+- About page now shows the dynamic **IIM "Created with Creative Clarity" badge** (a unique generative scene on every visit) in place of the static contributions graphic.
+
 ## [1.0.0] - 2026-06-11
 
 First public release. 🎬
