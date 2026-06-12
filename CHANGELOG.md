@@ -3,6 +3,14 @@
 All notable changes to Blueboxd are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.1.1] - 2026-06-12
+
+### Fixed
+- **Genre counts reconciled** — the film count shown beside each category on the homepage now matches the count inside that category's browse page. The homepage previously displayed raw upstream archive hit-counts (e.g. Comedy in the tens of thousands) while the browse page showed the true de-duplicated catalog total. Both now derive from the same `buildRailMaster()` source, so they can never disagree.
+
+### Changed
+- **Mobile responsiveness pass** — added a dedicated phone breakpoint (≤640px). The header now wraps cleanly: brand and action buttons share the top row while the search bar drops to its own full-width row. Nav buttons, the theme toggle and the profile pill are sized down (the profile handle collapses to its avatar) so nothing overflows the viewport, and the hero and poster rails are scaled for small screens.
+
 ## [1.1.0] - 2026-06-12
 
 ### Added
