@@ -316,7 +316,7 @@ async function verifySid(secret, signed) {
 }
 
 // records.js
-var OWNER_DID = globalThis.OWNER_DID || "did:plc:YOUR_OWNER_DID"; // set to your Bluesky account DID (the library/owner account)
+var OWNER_DID = "YOUR_OWNER_DID"; // blueboxd.bsky.social — Pete's host/owner account
 var NSID = {
   library: "uk.osintnet.cineclub.library",
   watch: "uk.osintnet.cineclub.watch",
@@ -483,7 +483,7 @@ async function clubWatching(env, { days = 30, limit = 24 } = {}) {
     lastAt: r.last_at,
   }));
   // Backfill missing posters on the fly (watch records logged before enrichment had none).
-  const APP_ID = (typeof CATALOG_APP_ID !== 'undefined' && CATALOG_APP_ID) || 'YOUR_BASE44_APP_ID';
+  const APP_ID = 'YOUR_BASE44_APP_ID';
   const CATALOG = `https://base44.app/api/apps/${APP_ID}/functions/cinevault`;
   const needs = films.filter(f => !f.poster && f.filmId).slice(0, 12);
   await Promise.all(needs.map(async f => {
@@ -930,7 +930,7 @@ textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-
 
 
 .statcards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:6px 0 8px}
-@media(min-width:560px){.statcards{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:560px){.statcards{grid-template-columns:repeat(4,1fr)}}@media(max-width:640px){.wrap{padding:0 11px}header .hd{height:auto;min-height:52px;flex-wrap:wrap;gap:8px;padding-top:8px;padding-bottom:8px}.logo{font-size:17px;order:1}.grow{order:2}#authslot{order:3;display:flex;align-items:center;gap:6px;flex-wrap:nowrap}.search{order:4;flex:1 0 100%;max-width:none;margin-top:2px}#authslot .tab{padding:7px 9px;font-size:12px;margin-right:0!important}.themetog{height:32px;padding:0 9px;font-size:12px;margin-right:0!important}.btn{padding:7px 11px;font-size:13px}.profbtn{padding:3px 4px;font-size:12px}.profbtn span:not(.ini){display:none}.menu{top:42px}.hero{margin:12px 0 4px;padding:16px;border-radius:15px}.hero h1{font-size:20px}.hero p{font-size:13.5px}.card,.card .pw{width:112px}.card .pw{height:166px}.person,.person .pc{width:64px}.person .pc{height:64px}.featured{padding:14px!important}}
 .statcard{background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.18);border-radius:14px;padding:14px 10px;text-align:center}
 .sc-ic{font-size:20px}.sc-n{font-size:26px;font-weight:800;line-height:1.1;margin-top:2px}.sc-l{font-size:12px;opacity:.7}
 .bars{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}
@@ -1970,7 +1970,7 @@ function showClickwrap(){
 </body></html>`;
 
 // worker.js
-var APP_ID = "YOUR_BASE44_APP_ID"; // your Base44 app id hosting the /cinevault catalog function
+var APP_ID = "YOUR_BASE44_APP_ID";
 var CATALOG_API = `https://base44.app/api/apps/${APP_ID}/functions/cinevault`;
 var SCOPE = "atproto transition:generic";
 var SESSION_TTL = 60 * 60 * 24 * 14;
@@ -2473,6 +2473,17 @@ var worker_default = {
             const docs = rl.docs || rl.films || [];
             return { ...rl, docs, total: (typeof rl.total === "number" ? rl.total : docs.length) };
           });
+          // COUNT RECONCILE: the upstream "home" action returns raw archive hit-counts
+          // (e.g. Comedy=127k) which disagree with the deduped category page. Recompute
+          // each rail's total from buildRailMaster — the SAME source the /api/rail
+          // browse page uses — so the number on the marquee matches the number inside.
+          await Promise.all(data.rails.map(async (rl) => {
+            if (!rl.id) return;
+            try {
+              const m = await buildRailMaster(env, rl.id);
+              if (m && typeof m.total === "number") rl.total = m.total;
+            } catch (e) {}
+          }));
           // FEATURED: Noir City marquee at the top of home. Reuse the deduped + curated
           // noir master (built by /api/rail logic, cached under hc:railmaster2:noir).
           try {
