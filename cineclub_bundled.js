@@ -316,7 +316,7 @@ async function verifySid(secret, signed) {
 }
 
 // records.js
-var OWNER_DID = "did:plc:YOUR_OWNER_DID"; // blueboxd.bsky.social — Pete's host/owner account
+var OWNER_DID = globalThis.OWNER_DID || "did:plc:YOUR_OWNER_DID"; // set to your Bluesky account DID (the library/owner account)
 var NSID = {
   library: "uk.osintnet.cineclub.library",
   watch: "uk.osintnet.cineclub.watch",
@@ -391,7 +391,7 @@ function buildLibrary({ filmId, title, year: year2, poster: poster2, status }) {
     year: year2 ? Number(year2) || String(year2) : void 0,
     poster: poster2 || void 0,
     status: status || "want",
-    // want | watching | watched
+    // want | watching | watched | owned
     addedAt: (/* @__PURE__ */ new Date()).toISOString()
   };
 }
@@ -483,7 +483,7 @@ async function clubWatching(env, { days = 30, limit = 24 } = {}) {
     lastAt: r.last_at,
   }));
   // Backfill missing posters on the fly (watch records logged before enrichment had none).
-  const APP_ID = '69a76ce1b110c1c0c8c86855';
+  const APP_ID = (typeof CATALOG_APP_ID !== 'undefined' && CATALOG_APP_ID) || 'YOUR_BASE44_APP_ID';
   const CATALOG = `https://base44.app/api/apps/${APP_ID}/functions/cinevault`;
   const needs = films.filter(f => !f.poster && f.filmId).slice(0, 12);
   await Promise.all(needs.map(async f => {
@@ -521,7 +521,7 @@ async function friendsWatching(env, followDids, { days = 60, limit = 30 } = {}) 
 
 // party.js
 var HOST_HANDLE = "blueboxd.bsky.social";
-var HOST_PDS = "https://YOUR-PDS.host.bsky.network";
+var HOST_PDS = "https://jellybaby.us-east.host.bsky.network";
 var APPVIEW = "https://public.api.bsky.app";
 async function hostSession(env) {
   const cached = await env.CC_KV.get("host:sess", "json");
@@ -877,6 +877,10 @@ header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 8
 .card{flex:0 0 auto;width:124px;scroll-snap-align:start;cursor:pointer}
 .card .pw{width:124px;height:182px;border-radius:12px;overflow:hidden;background:var(--well);border:1px solid var(--line);position:relative;box-shadow:var(--shadow)}
 .card img{width:100%;height:100%;object-fit:cover}
+.pw img{opacity:0;transition:opacity .35s ease}
+.pw img.on{opacity:1}
+.pc img{opacity:0;transition:opacity .35s ease}
+.pc img.on{opacity:1}
 .card .ph{width:100%;height:100%;display:grid;place-items:center;color:var(--mut);font-size:28px}
 .card .t{font-size:12.5px;margin-top:6px;line-height:1.25;max-height:32px;overflow:hidden;color:#d6dade}
 .card .y{font-size:11px;color:var(--mut)}
@@ -902,6 +906,40 @@ header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 8
 textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px;font:14px system-ui;resize:vertical;min-height:70px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
 .chip.on{background:var(--acc);color:#1a1208;border-color:transparent;font-weight:700}
+.addallrow{margin:0 0 14px}
+.artmodal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px}
+.artbox{background:var(--bg,#0d1117);border:1px solid rgba(127,127,127,.3);border-radius:16px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.arthd{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(127,127,127,.2);font-size:16px}
+.artx{cursor:pointer;font-size:20px;opacity:.7;padding:0 4px}.artx:hover{opacity:1}
+.arttabs{display:flex;gap:8px;padding:10px 16px 0}
+.arttab{background:rgba(127,127,127,.12);border:0;color:inherit;padding:7px 16px;border-radius:999px;cursor:pointer;font-size:13px}
+.arttab.on{background:#2f81f7;color:#fff;font-weight:700}
+.artbody{overflow-y:auto;padding:14px 16px;flex:1}
+.artgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.artgrid.wide{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.artcell{cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid transparent;transition:border-color .12s,transform .12s}
+.artcell:hover{border-color:#2f81f7;transform:scale(1.03)}
+.artcell.sel{border-color:#3fb950}
+.artcell img{width:100%;display:block;aspect-ratio:2/3;object-fit:cover}
+.artgrid.wide .artcell img{aspect-ratio:16/9}
+.artfoot{padding:10px 16px;border-top:1px solid rgba(127,127,127,.2);text-align:right}
+.diaryfilters{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 18px}
+.dfilter{background:rgba(127,127,127,.12);border:0;color:inherit;padding:7px 14px;border-radius:999px;cursor:pointer;font-size:13px}
+.dfilter.on{background:#2f81f7;color:#fff;font-weight:700}
+.dstars{color:#f5c518;font-size:12px;margin-top:3px;text-align:center}
+
+
+.statcards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:6px 0 8px}
+@media(min-width:560px){.statcards{grid-template-columns:repeat(4,1fr)}}
+.statcard{background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.18);border-radius:14px;padding:14px 10px;text-align:center}
+.sc-ic{font-size:20px}.sc-n{font-size:26px;font-weight:800;line-height:1.1;margin-top:2px}.sc-l{font-size:12px;opacity:.7}
+.bars{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}
+.barrow{display:flex;align-items:center;gap:10px}
+.barlbl{flex:0 0 56px;font-size:13px;opacity:.85;text-align:right}
+.bartrack{flex:1;height:14px;background:rgba(127,127,127,.15);border-radius:8px;overflow:hidden}
+.barfill{height:100%;background:linear-gradient(90deg,#2f81f7,#79c0ff);border-radius:8px;min-width:3px}
+.barn{flex:0 0 28px;font-size:13px;font-weight:700}
+.addallrow .btn{font-size:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px}
 .modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:18px}
 .sheet{background:var(--panel);border:1px solid var(--line);border-radius:18px;max-width:420px;width:100%;padding:22px}
@@ -974,6 +1012,43 @@ footer{border-top:1px solid var(--line);padding:24px 0 40px;color:var(--mut);fon
 .tipwrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .qr{background:#fff;padding:10px;border-radius:14px;border:1px solid var(--line);box-shadow:var(--shadow);flex:0 0 auto}
 .qr img{width:180px;height:180px;display:block}
+
+/* ===== Noir City featured marquee ===== */
+.featured.noircity{margin:18px 0 10px;padding:18px 16px 14px;border-radius:18px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0a0c14 0%,#141a2c 55%,#1a1020 100%);border:1px solid #2a3450;
+  box-shadow:0 10px 34px rgba(0,0,0,.45)}
+.featured.noircity::before{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(90deg,transparent 0 38px,rgba(255,255,255,.025) 38px 40px);pointer-events:none}
+.featured.noircity .feathd{position:relative;z-index:1;cursor:pointer;margin-bottom:10px}
+.featured.noircity h2{margin:0;font-size:21px;letter-spacing:.5px;color:#f4d9a8;
+  text-shadow:0 0 14px rgba(255,180,84,.45),0 0 2px rgba(255,180,84,.8)}
+.featured.noircity .featcount{font-size:12px;color:#8fa0c0;font-weight:600;margin-left:6px;text-shadow:none}
+.featured.noircity .feattag{margin:4px 0 0;font-size:13px;color:#aeb8d0;font-style:italic;max-width:620px}
+.featured.noircity .seeall{color:#ffb454;margin-left:6px}
+.featured.noircity .scroller{position:relative;z-index:1}
+/* ===== Walled-garden play gate ===== */
+.playgate{background:var(--well);border:1px dashed var(--line);border-radius:16px;padding:26px 20px;text-align:center;margin:18px 0}
+.playgate-inner{max-width:420px;margin:0 auto}
+.playgate .pglock{font-size:38px;margin-bottom:6px}
+.playgate h3{margin:4px 0 8px;font-size:18px}
+.playgate p{margin:0 0 14px;color:var(--mut);font-size:14px;line-height:1.5}
+.playgate .pgsub{margin-top:12px;font-size:12px;color:var(--mut)}
+/* ===== Liability gate v2 (blocking modal) ===== */
+.gate{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.gatebox{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:100%;max-width:560px;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.6);margin:auto}
+.gatehd{text-align:center;margin-bottom:14px}
+.gatehd .gatelogo{font-size:34px}
+.gatehd h2{margin:6px 0 4px;font-size:21px}
+.gatehd .gatesub{margin:0;color:var(--mut);font-size:13.5px}
+.gatebody{font-size:13px;line-height:1.5}
+.gatelist{margin:0 0 14px;padding-left:18px;color:var(--txt)}
+.gatelist li{margin:0 0 9px}
+.gatelist b{color:var(--txt)}
+.gatecheck{display:flex;gap:9px;align-items:flex-start;background:var(--well);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;font-size:13px;line-height:1.45}
+.gatecheck input{margin-top:2px;width:18px;height:18px;flex-shrink:0;accent-color:var(--acc)}
+.gatebtns{display:flex;gap:10px;margin-top:16px}
+.gatebtns .btn{flex:1;justify-content:center;text-align:center}
+.gatebtns .btn.acc[disabled]{opacity:.45;cursor:not-allowed;filter:grayscale(.3)}
 </style></head>
 <body>
 <header><div class="wrap hd">
@@ -1001,8 +1076,8 @@ const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=nu
 function go(p){history.pushState({},'',p);route();}
 window.addEventListener('popstate',route);
 function toast(m){const t=el('div','toast',m);document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
-function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-async function jget(u){const r=await fetch(u,{credentials:'include'});return r.json();}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+async function jget(u){const r=await fetch(u,{credentials:'include'});const t=await r.text();try{return JSON.parse(t);}catch(e){return {error:'bad_response',status:r.status};}}
 async function jpost(u,b){const r=await fetch(u,{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify(b)});return r.json();}
 
 function themeLabel(){return curTheme()==='dark'?'☀ Light':'☾ Dark';}
@@ -1053,6 +1128,21 @@ async function home(){
   hero.innerHTML='<h1>Free cinema. Your club. On Bluesky.</h1><p>Hand-picked public-domain classics — noir, sci-fi, horror, gangster &amp; more. Watch free, keep a film diary, share what you love. '+(ME.loggedIn?'':'<b>Log in to start your diary →</b>')+'</p>';
   if(!ME.loggedIn){const b=el('button','btn acc','Log in with Bluesky 🦋');b.style.marginTop='12px';b.onclick=loginModal;hero.appendChild(b);}
   app.appendChild(hero);
+
+  // FEATURED: Noir City marquee (top of home)
+  if(d.featured&&d.featured.docs&&d.featured.docs.length){
+    const fr=el('div','featured noircity');
+    const fh=el('div','feathd');
+    fh.innerHTML='<h2>'+esc(d.featured.label||'\uD83C\uDF03 Noir City')+' <span class="featcount">'+(d.featured.total||d.featured.docs.length)+'</span></h2>'+
+                 (d.featured.tagline?'<p class="feattag">'+esc(d.featured.tagline)+'</p>':'');
+    const seeall=el('span','seeall',' See all \u2192');seeall.onclick=()=>go('/genre/noir');fh.appendChild(seeall);
+    fh.style.cursor='pointer';fh.onclick=(e)=>{if(e.target===seeall)return;go('/genre/noir');};
+    fr.appendChild(fh);
+    const sc=el('div','scroller');
+    d.featured.docs.forEach(f=>sc.appendChild(cardEl(f)));
+    fr.appendChild(sc);
+    app.appendChild(fr);
+  }
 
   if(d.people&&d.people.length){
     const stars=d.people.filter(p=>p.role!=='director');
@@ -1109,7 +1199,10 @@ async function home(){
       r.appendChild(sc);app.appendChild(r);
     }
   }catch(e){}
-  (d.rails||[]).forEach(rl=>app.appendChild(railEl(rl)));
+  (d.rails||[]).forEach((rl,ri)=>{
+    if(ri===0&&rl&&rl.docs){rl.docs.slice(0,6).forEach(f=>{if(f)f._eager=true;});}
+    app.appendChild(railEl(rl));
+  });
 }
 
 function peopleRail(title,people){
@@ -1122,7 +1215,7 @@ function personCard(p){
   const c=el('div','person');
   const mono=esc((p.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase());
   const pcd=el('div','pc');
-  if(p.portrait){const im=el('img');im.loading='lazy';im.src=p.portrait;im.onerror=function(){pcd.textContent=mono;};pcd.appendChild(im);}else{pcd.textContent=mono;}
+  if(p.portrait){const im=el('img');im.loading='lazy';im.decoding='async';im.addEventListener('load',function(){im.classList.add('on');});im.onerror=function(){pcd.textContent=mono;};im.src=p.portrait;if(im.complete&&im.naturalWidth>0)im.classList.add('on');pcd.appendChild(im);}else{pcd.textContent=mono;}
   c.appendChild(pcd);
   c.appendChild(el('div','pn',esc(p.name)));
   c.onclick=()=>go('/person/'+p.id);return c;
@@ -1131,7 +1224,7 @@ function personCard(p){
 function clubCard(f){
   const c=el('div','card');
   const pw=el('div','pw');
-  if(f.poster){const im=el('img');im.loading='lazy';im.src=f.poster;im.onerror=function(){pw.innerHTML='<div class="ph">🎞️</div>';};pw.appendChild(im);}
+  if(f.poster){pw.appendChild(_posterImg(f.poster,pw,!!f._eager));}
   else pw.innerHTML='<div class="ph">🎞️</div>';
   c.appendChild(pw);
   c.appendChild(el('div','t',esc(f.title||'')));
@@ -1181,24 +1274,60 @@ async function clubPage(){
   }catch(e){cmount.appendChild(el('p','muted','Couldn’t load the club feed.'));}
 }
 function railEl(rl){
+  const items=rl.docs||rl.films||[];
+  const total=(typeof rl.total==='number')?rl.total:items.length;
   const r=el('div','rail');
-  const h=el('h2',null,esc(rl.label)+' <span class="count">'+(rl.total||(rl.docs||[]).length)+'</span>');
-  if(rl.id&&(rl.total||0)>(rl.docs||[]).length){const sa=el('span','seeall',' See all →');sa.onclick=()=>go('/genre/'+rl.id);h.appendChild(sa);h.style.cursor='pointer';h.onclick=()=>go('/genre/'+rl.id);}
+  const h=el('h2',null,esc(rl.label)+' <span class="count">'+total+'</span>');
+  if(rl.id&&total>items.length){const sa=el('span','seeall',' See all →');sa.onclick=()=>go('/genre/'+rl.id);h.appendChild(sa);h.style.cursor='pointer';h.onclick=()=>go('/genre/'+rl.id);}
   r.appendChild(h);
   const sc=el('div','scroller');
-  (rl.docs||[]).forEach(f=>sc.appendChild(cardEl(f)));
+  items.forEach(f=>sc.appendChild(cardEl(f)));
   r.appendChild(sc);return r;
+}
+function _posterImg(src, pw, eager){
+  const im=el('img');
+  im.loading=eager?'eager':'lazy';
+  im.decoding='async';
+  if(eager){try{im.fetchPriority='high';}catch(e){}}
+  im.addEventListener('load',function(){im.classList.add('on');});
+  im.onerror=function(){pw.innerHTML='<div class="ph">\ud83c\udf9e\ufe0f</div>';};
+  im.src=src;
+  // already-cached images may not fire load
+  if(im.complete&&im.naturalWidth>0)im.classList.add('on');
+  return im;
 }
 function cardEl(f){
   const c=el('div','card');
   const pw=el('div','pw');
-  if(f.poster){const im=el('img');im.loading='lazy';im.src=f.poster;im.onerror=function(){pw.innerHTML='<div class="ph">🎞️</div>';};pw.appendChild(im);}
+  if(f.poster){pw.appendChild(_posterImg(f.poster,pw,!!f._eager));}
   else pw.innerHTML='<div class="ph">🎞️</div>';
   c.appendChild(pw);
   c.appendChild(el('div','t',esc(f.title||'')));
   if(f.year)c.appendChild(el('div','y',f.year));
   c.onclick=()=>go('/film/'+encodeURIComponent(f.id));
   return c;
+}
+
+// ── PATRON-free: one-click "Add all visible films to my list" ──
+function addAllBtn(getFilms){
+  const wrap=el('div','addallrow');
+  const b=el('button','btn acc');
+  function label(n){return '\u2795 Add all'+(n?' ('+n+')':'')+' to my list';}
+  b.textContent=label((getFilms()||[]).length);
+  b.onclick=async()=>{
+    if(!ME.loggedIn)return needLogin();
+    const films=(getFilms()||[]).filter(f=>f&&f.id);
+    if(!films.length)return toast('Nothing to add yet');
+    b.disabled=true;let ok=0,fail=0;
+    for(let i=0;i<films.length;i++){const f=films[i];
+      b.textContent='Adding \u2026 '+(i+1)+'/'+films.length;
+      try{const r=await jpost('/api/library',{filmId:f.id,title:f.title,year:f.year,poster:f.poster,status:'want'});if(r&&r.ok)ok++;else fail++;}catch(e){fail++;}
+    }
+    b.textContent='\u2713 Added '+ok+' to your list';
+    toast('Added '+ok+' film'+(ok===1?'':'s')+' to your list'+(fail?' \u00b7 '+fail+' skipped':'')+' \ud83c\udf7f');
+    setTimeout(()=>{b.disabled=false;b.textContent=label(films.length);},2600);
+  };
+  wrap.appendChild(b);return wrap;
 }
 
 // ---------- PERSON / SEARCH grids ----------
@@ -1216,13 +1345,15 @@ async function personPage(id){
   const info=el('div');info.innerHTML='<h1>'+esc(d.name||'Films')+'</h1><div class="muted">'+(d.role==='director'?'Director':'Star')+' · '+total+' films</div>';
   head.appendChild(info);
   app.appendChild(head);
+  const _all=[];
+  app.appendChild(addAllBtn(()=>_all));
   const g=el('div','grid');app.appendChild(g);
-  (d.docs||[]).forEach(f=>g.appendChild(cardEl(f)));
+  (d.docs||[]).forEach(f=>{_all.push(f);g.appendChild(cardEl(f));});
   if((d.docs||[]).length>=total)done=true;
   const sent=el('div');sent.style.height='1px';app.appendChild(sent);
   async function more(){if(busy||done)return;busy=true;page++;
     const r=await jget('/api/person?id='+encodeURIComponent(id)+'&rows=40&page='+page);
-    (r.docs||[]).forEach(f=>g.appendChild(cardEl(f)));
+    (r.docs||[]).forEach(f=>{_all.push(f);g.appendChild(cardEl(f));});
     if(!(r.docs||[]).length)done=true;busy=false;}
   const io=new IntersectionObserver(es=>{if(es[0].isIntersecting)more();},{rootMargin:'600px'});io.observe(sent);
   document.title=(d.name||'Films')+' — Blueboxd';
@@ -1235,12 +1366,14 @@ async function genrePage(id){
   const d=await jget('/api/rail?id='+encodeURIComponent(id)+'&rows=60&page=1');
   app.innerHTML='';
   app.appendChild(el('h2',null,esc(d.label||'Browse')+' <span class="count">'+(d.total||0)+'</span>'));
+  const _all=[];
+  app.appendChild(addAllBtn(()=>_all));
   const g=el('div','grid');app.appendChild(g);
-  (d.docs||[]).forEach(f=>g.appendChild(cardEl(f)));
+  (d.docs||[]).forEach(f=>{_all.push(f);g.appendChild(cardEl(f));});
   const sent=el('div');sent.style.height='1px';app.appendChild(sent);
   async function more(){if(busy||done)return;busy=true;page++;
     const r=await jget('/api/rail?id='+encodeURIComponent(id)+'&rows=60&page='+page);
-    (r.docs||[]).forEach(f=>g.appendChild(cardEl(f)));
+    (r.docs||[]).forEach(f=>{_all.push(f);g.appendChild(cardEl(f));});
     if(!(r.docs||[]).length)done=true;busy=false;}
   const io=new IntersectionObserver(es=>{if(es[0].isIntersecting)more();},{rootMargin:'700px'});io.observe(sent);
   document.title=(d.label||'Browse')+' — Blueboxd';
@@ -1249,7 +1382,9 @@ async function searchPage(q){
   const app=$('#app');app.innerHTML='<div class="center"><div class="spin"></div></div>';
   const d=await jget('/api/search?q='+encodeURIComponent(q));try{jpost('/api/searchlog',{q:q,results:(d&&d.docs&&d.docs.length)||0}).catch(()=>{});}catch(e){}
   app.innerHTML='';app.appendChild(el('h2',null,'🔎 “'+esc(q)+'”'));
-  const g=el('div','grid');(d.docs||[]).forEach(f=>g.appendChild(cardEl(f)));
+  const _films=(d.docs||[]);
+  if(_films.length)app.appendChild(addAllBtn(()=>_films));
+  const g=el('div','grid');_films.forEach(f=>g.appendChild(cardEl(f)));
   if(!(d.docs||[]).length)app.appendChild(el('p','muted','No matches. Try another title.'));
   app.appendChild(g);
 }
@@ -1259,6 +1394,7 @@ function plog(action,d,reason){try{navigator.sendBeacon&&navigator.sendBeacon('/
 async function filmPage(id){
   const app=$('#app');app.innerHTML='<div class="center"><div class="spin"></div></div>';
   let d;try{d=await jget('/api/detail?id='+encodeURIComponent(id));}catch(e){app.innerHTML='<div class="center">Couldn’t load this film.</div>';return;}
+  if(!d||d.error||d.verified===false){app.innerHTML='<div class="center" style="padding:48px 20px"><div style="font-size:42px">🎞️</div><h2 style="margin:12px 0 6px">Not in the verified film library</h2><p class="muted">Blueboxd only shows titles confirmed in the film database with a real poster &amp; synopsis. This one didn’t qualify.</p><a class="btn acc" href="#/" style="margin-top:14px;display:inline-block">← Back to films</a></div>';document.title='Not available — Blueboxd';return;}
   app.innerHTML='';
   const f=el('div','film');
   const top=el('div','top');
@@ -1266,14 +1402,18 @@ async function filmPage(id){
   const meta=el('div','meta');
   meta.innerHTML='<h1>'+esc(d.title||'')+'</h1><div class="sub">'+[d.year,d.director,d.runtime].filter(Boolean).map(esc).join(' · ')+'</div>';
   const act=el('div','actions');
-  const playB=el('button','btn acc','▶ Watch free');playB.onclick=()=>startPlay(d);
+  const playB=el('button','btn acc',ME.loggedIn?'▶ Watch free':'\uD83D\uDD12 Log in to watch');playB.onclick=()=>startPlay(d);
   const libB=el('button','btn','＋ My list');libB.onclick=()=>addLib(d,'want',libB);
   const watchedB=el('button','btn','✓ Watched');watchedB.onclick=()=>addLib(d,'watched',watchedB,true);
-  act.append(playB,libB,watchedB);
+  const ownB=el('button','btn','🎞 Owned');ownB.title='Mark as owned (in your collection)';ownB.onclick=()=>addLib(d,'owned',ownB);
+  act.append(playB,libB,watchedB,ownB);
   if(ME.isOwner){
     const pickB=el('button','btn','★ Pete’s Pick');pickB.title='Add / remove from Pete’s Picks';
     pickB.onclick=()=>togglePick(d,pickB);
     act.appendChild(pickB);
+    const artB=el('button','btn','🖼 Artwork');artB.title='Pick a poster or backdrop from TMDb';
+    artB.onclick=()=>openArtwork(d);
+    act.appendChild(artB);
   }
   meta.appendChild(act);
   top.append(pos,meta);f.appendChild(top);
@@ -1284,8 +1424,26 @@ async function filmPage(id){
   app.appendChild(f);
   document.title=(d.title||'Film')+' — Blueboxd';
 }
+function showPlayGate(d){
+  const host=$('#playerHost');if(!host)return;
+  host.innerHTML='';
+  const g=el('div','playgate');
+  const inner=el('div','playgate-inner');
+  inner.innerHTML='<div class="pglock">\uD83D\uDD12</div>'+
+    '<h3>Free to watch \u2014 with Bluesky</h3>'+
+    '<p>Blueboxd is a Bluesky film club. Log in with your Bluesky account to play this film, keep a diary, and join the club. Your data stays in your own repo.</p>';
+  const b=el('button','btn acc','Log in with Bluesky \uD83E\uDD8B');
+  b.onclick=loginModal;
+  inner.appendChild(b);
+  const sub=el('p','pgsub','Browsing is open \u2014 playback needs a free Bluesky login.');
+  inner.appendChild(sub);
+  g.appendChild(inner);host.appendChild(g);
+  g.scrollIntoView({behavior:'smooth',block:'center'});
+}
 function startPlay(d){
   const host=$('#playerHost');if(!host)return;
+  // WALLED GARDEN: no playback without a Bluesky login.
+  if(!ME.loggedIn){plog('gated',d,'not_logged_in');return showPlayGate(d);}
   host.innerHTML='';
   plog('attempt',d);
   if(!d.streamUrl){
@@ -1301,6 +1459,42 @@ function startPlay(d){
   v.scrollIntoView({behavior:'smooth',block:'center'});
   // auto-log a watch when playback starts (if logged in)
   {let ok=false;v.addEventListener('playing',()=>{if(ok)return;ok=true;plog('success',d);if(ME.loggedIn)jpost('/api/watch',{filmId:d.id,title:d.title}).catch(()=>{});});}
+}
+async function openArtwork(d){
+  if(!ME.isOwner)return;
+  if(!d.tmdbId){toast('No TMDb id for this film');return;}
+  const ov=el('div','artmodal');
+  const card=el('div','artbox');
+  card.innerHTML='<div class="arthd"><b>🖼 Choose artwork</b><span class="artx">✕</span></div><div class="arttabs"><button class="arttab on" data-t="posters">Posters</button><button class="arttab" data-t="backdrops">Backdrops</button></div><div class="artbody"><div class="center"><div class="spin"></div></div></div><div class="artfoot"><button class="btn artreset">↺ Reset to default</button></div>';
+  ov.appendChild(card);document.body.appendChild(ov);
+  function close(){ov.remove();}
+  ov.onclick=(e)=>{if(e.target===ov)close();};
+  card.querySelector('.artx').onclick=close;
+  const body=card.querySelector('.artbody');
+  let data=null;
+  try{data=await jget('/api/images?tmdb='+encodeURIComponent(d.tmdbId));}catch(e){}
+  function render(kind){
+    const arr=(data&&data[kind])||[];
+    body.innerHTML='';
+    if(!arr.length){body.innerHTML='<p class="muted" style="padding:20px;text-align:center">No '+kind+' found on TMDb for this title.</p>';return;}
+    const grid=el('div',kind==='posters'?'artgrid':'artgrid wide');
+    arr.forEach(im=>{
+      const cell=el('div','artcell');
+      cell.innerHTML='<img loading="lazy" src="'+esc(im.thumb)+'">';
+      cell.onclick=async()=>{
+        cell.classList.add('sel');
+        const payload=kind==='posters'?{filmId:d.id,poster:im.full}:{filmId:d.id,backdrop:im.full};
+        const r=await jpost('/api/artwork',payload);
+        if(r&&r.ok){toast('Artwork updated ✨');close();filmPage(d.id);}
+        else{toast('Could not save');cell.classList.remove('sel');}
+      };
+      grid.appendChild(cell);
+    });
+    body.appendChild(grid);
+  }
+  card.querySelectorAll('.arttab').forEach(t=>{t.onclick=()=>{card.querySelectorAll('.arttab').forEach(x=>x.classList.remove('on'));t.classList.add('on');render(t.dataset.t);};});
+  card.querySelector('.artreset').onclick=async()=>{const r=await jpost('/api/artwork',{filmId:d.id,reset:true});if(r&&r.ok){toast('Reset to default poster');close();filmPage(d.id);}};
+  render('posters');
 }
 async function togglePick(d,btn){
   if(!ME.isOwner)return;
@@ -1322,7 +1516,11 @@ async function addLib(d,status,btn,alsoWatchLog){
   if(!ME.loggedIn)return needLogin();
   btn.textContent='…';
   const r=await jpost('/api/library',{filmId:d.id,title:d.title,year:d.year,poster:d.poster,status});
-  if(r.ok){btn.textContent=status==='watched'?'✓ Watched':'✓ In list';toast(status==='watched'?'Marked watched ✓':'Added to your list ✓');}
+  if(r.ok){
+    const lbl=status==='watched'?'✓ Watched':status==='owned'?'✓ Owned':'✓ In list';
+    const msg=status==='watched'?'Marked watched ✓':status==='owned'?'Added to your collection 🎞':'Added to your list ✓';
+    btn.textContent=lbl;toast(msg);
+  }
   else{btn.textContent='Try again';toast('Could not save — try again');}
 }
 function reviewBlock(d){
@@ -1355,12 +1553,82 @@ async function diaryPage(){
   const lib=(d.library||[]).map(r=>r.value);
   const rev=(d.review||[]).map(r=>r.value);
   const watched=lib.filter(x=>x.status==='watched');
-  const want=lib.filter(x=>x.status!=='watched');
-  app.appendChild(el('p','muted',watched.length+' watched · '+want.length+' in list · '+rev.length+' reviews'));
+  const owned=lib.filter(x=>x.status==='owned');
+  const want=lib.filter(x=>x.status!=='watched'&&x.status!=='owned');
+  app.appendChild(el('p','muted',watched.length+' watched · '+want.length+' in list · '+owned.length+' owned · '+rev.length+' reviews'));
+  const statsB=el('button','btn acc','📊 View stats');statsB.onclick=function(){go('/stats');};statsB.style.margin='6px 8px 16px 0';app.appendChild(statsB);
   const out=el('button','btn','Log out');out.onclick=()=>location.href='/logout';out.style.margin='6px 0 16px';app.appendChild(out);
-  section('✓ Watched',watched);section('🔖 Want to watch',want);
-  function section(title,arr){if(!arr.length)return;app.appendChild(el('h2',null,title));const g=el('div','grid');arr.forEach(x=>g.appendChild(cardEl({id:x.filmId,title:x.title,year:x.year,poster:x.poster})));app.appendChild(g);}
-  if(!lib.length)app.appendChild(el('p','muted','Nothing yet — browse the catalog and add films to your list!'));
+  // ── type filter bar ──
+  const FILTERS=[['all','All'],['watched','✓ Watched'],['want','🔖 Want'],['owned','🎞 Owned'],['reviews','✍️ Reviews']];
+  let active=(location.hash.split('?f=')[1]||'all');
+  if(!FILTERS.some(f=>f[0]===active))active='all';
+  const bar=el('div','diaryfilters');
+  const body=el('div');
+  FILTERS.forEach(([k,lbl])=>{
+    const b=el('button','dfilter'+(k===active?' on':''),lbl);
+    b.onclick=()=>{active=k;[...bar.children].forEach(c=>c.classList.remove('on'));b.classList.add('on');renderBody();};
+    bar.appendChild(b);
+  });
+  app.appendChild(bar);app.appendChild(body);
+  function reviewCard(x){const c=cardEl({id:x.filmId,title:x.title,year:x.year,poster:x.poster});if(x.stars){const s=el('div','dstars','★'.repeat(Math.max(1,Math.min(5,Number(x.stars)||0))));c.appendChild(s);}return c;}
+  function section(title,arr,isRev){if(!arr.length)return;body.appendChild(el('h2',null,title));const g=el('div','grid');arr.forEach(x=>g.appendChild(isRev?reviewCard(x):cardEl({id:x.filmId,title:x.title,year:x.year,poster:x.poster})));body.appendChild(g);}
+  function renderBody(){
+    body.innerHTML='';
+    if(active==='all'){section('✓ Watched',watched);section('🔖 Want to watch',want);section('🎞 Owned',owned);section('✍️ Reviewed',rev,true);}
+    else if(active==='watched')section('✓ Watched',watched);
+    else if(active==='want')section('🔖 Want to watch',want);
+    else if(active==='owned')section('🎞 Owned',owned);
+    else if(active==='reviews')section('✍️ Reviewed',rev,true);
+    if(!body.children.length)body.appendChild(el('p','muted',active==='all'?'Nothing yet — browse the catalog and add films to your list!':'No films in this filter yet.'));
+  }
+  renderBody();
+}
+async function statsPage(){
+  if(!ME.loggedIn){needLogin();go('/');return;}
+  const app=$('#app');app.innerHTML='<div class="center"><div class="spin"></div></div>';
+  const d=await jget('/api/diary');
+  app.innerHTML='';
+  app.appendChild(el('h2',null,'📊 @'+esc(ME.handle)+'’s stats'));
+  const lib=(d.library||[]).map(function(r){return r.value;});
+  const rev=(d.review||[]).map(function(r){return r.value;});
+  const wat=(d.watch||[]).map(function(r){return r.value;});
+  const watched=lib.filter(function(x){return x.status==='watched';});
+  const want=lib.filter(function(x){return x.status!=='watched'&&x.status!=='owned';});
+  if(!lib.length&&!rev.length&&!wat.length){
+    app.appendChild(el('p','muted','No stats yet — log some films and they’ll show up here. 🍿'));
+    const b=el('button','btn acc','Browse films');b.onclick=function(){go('/');};app.appendChild(b);return;
+  }
+  const avg=rev.length?(rev.reduce(function(a,r){return a+(Number(r.stars)||0);},0)/rev.length):0;
+  const owned=lib.filter(function(x){return x.status==='owned';});
+  const cards=[['🎬',watched.length,'watched'],['🔖',want.length,'in your list'],['🎞',owned.length,'owned'],['✍️',rev.length,'reviews'],['⭐',avg?avg.toFixed(1):'–','avg rating']];
+  const cw=el('div','statcards');
+  cards.forEach(function(c){var x=el('div','statcard');x.innerHTML='<div class="sc-ic">'+c[0]+'</div><div class="sc-n">'+c[1]+'</div><div class="sc-l">'+c[2]+'</div>';cw.appendChild(x);});
+  app.appendChild(cw);
+  const decs={};
+  watched.forEach(function(x){var y=parseInt(x.year,10);if(y>1880&&y<2100){var dd=Math.floor(y/10)*10;decs[dd]=(decs[dd]||0)+1;}});
+  const decKeys=Object.keys(decs).map(Number).sort(function(a,b){return a-b;});
+  if(decKeys.length){
+    app.appendChild(el('h2',null,'📅 By decade'));
+    var dmax=Math.max.apply(null,decKeys.map(function(k){return decs[k];}));
+    var dwrap=el('div','bars');
+    decKeys.forEach(function(k){var row=el('div','barrow');row.innerHTML='<div class="barlbl">'+k+'s</div><div class="bartrack"><div class="barfill" style="width:'+Math.round(decs[k]/dmax*100)+'%"></div></div><div class="barn">'+decs[k]+'</div>';dwrap.appendChild(row);});
+    app.appendChild(dwrap);
+  }
+  if(rev.length){
+    app.appendChild(el('h2',null,'⭐ Your ratings'));
+    var hist=[0,0,0,0,0];rev.forEach(function(r){var st=Math.max(1,Math.min(5,Number(r.stars)||0));hist[st-1]++;});
+    var rmax=Math.max.apply(null,hist.concat([1]));
+    var rwrap=el('div','bars');
+    for(var st=5;st>=1;st--){var row=el('div','barrow');row.innerHTML='<div class="barlbl">'+'★'.repeat(st)+'</div><div class="bartrack"><div class="barfill" style="width:'+Math.round(hist[st-1]/rmax*100)+'%"></div></div><div class="barn">'+hist[st-1]+'</div>';rwrap.appendChild(row);}
+    app.appendChild(rwrap);
+  }
+  if(wat.length){
+    var recent=wat.slice().sort(function(a,b){return String(b.watchedAt||'').localeCompare(String(a.watchedAt||''));}).slice(0,8);
+    app.appendChild(el('h2',null,'🕒 Recently watched'));
+    var g=el('div','grid');recent.forEach(function(x){g.appendChild(cardEl({id:x.filmId,title:x.title}));});app.appendChild(g);
+  }
+  const back=el('button','btn','← Back to diary');back.onclick=function(){go('/diary');};back.style.margin='18px 0 0';app.appendChild(back);
+  document.title='Stats — Blueboxd';
 }
 async function profilePage(handle){
   const app=$('#app');app.innerHTML='<div class="center"><div class="spin"></div></div>';
@@ -1433,8 +1701,12 @@ function staticPage(which){
       +'<h3>What Blueboxd is</h3><p>Blueboxd is a free, non-commercial film diary and watch-party layer built on the AT Protocol (Bluesky). We curate films we believe to be in the <b>public domain</b> and stream them <b>directly from the Internet Archive</b>. <b>Blueboxd hosts and stores no video files</b> — we link to and embed archival sources only.</p>'
       +'<h3>Your content</h3><p>Your diary entries, watches, ratings and reviews are written to <b>your own Bluesky repository</b>. You own them and can delete them at any time from your account.</p>'
       +'<h3>Conduct</h3><p>Be decent. Bluesky moderation — mutes, blocks and labels — applies in watch-party reaction walls. We may hide reactions that violate Bluesky community guidelines.</p>'
-      +'<h3>No warranty</h3><p>Provided “as is,” free of charge, with no warranty. Availability of any title depends on the Internet Archive and may change without notice.</p>'
-      +'<h3>Copyright / takedown</h3><p>We respect rights holders. If you believe a title is not actually public domain, see our <a href="/dmca">takedown page</a> — we act fast and remove first, verify after.</p></div>';
+      +'<h3>Age requirement (18+)</h3><p>Blueboxd is intended for adults <b>18 years of age or older</b>. By using the site you represent that you are at least 18. Films are vintage works and may contain mature, dated, or historically sensitive content. If you are under 18, do not use this site.</p>'
+      +'<h3>Third-party content &amp; sources</h3><p>All films stream <b>directly from the Internet Archive (archive.org)</b>, a third party. <b>Blueboxd hosts no video, controls no content, and is not responsible</b> for any material delivered by archive.org or other third parties. Public-domain status is presented in good faith based on available information and is <b>not legal advice</b>. You are responsible for ensuring your use of any title is lawful in your jurisdiction.</p>'
+      +'<h3>No warranty (“as is”)</h3><p>The service is provided <b>“as is” and “as available,” free of charge, with no warranties of any kind</b>, express or implied, including (without limitation) merchantability, fitness for a particular purpose, accuracy, or availability. Availability of any title depends on the Internet Archive and may change or disappear without notice.</p>'
+      +'<h3>Assumption of risk &amp; limitation of liability</h3><p>You use Blueboxd <b>entirely at your own risk</b>. To the <b>maximum extent permitted by law</b>, Blueboxd, its operator, and its contributors shall not be liable for any direct, indirect, incidental, consequential, special, or punitive damages, or any loss whatsoever, arising out of or related to your use of (or inability to use) the site or any content accessed through it. You agree to <b>indemnify and hold harmless</b> Blueboxd and its operator from any claim arising out of your use of the site or your violation of these Terms. Some jurisdictions do not allow certain limitations, so parts of this section may not apply to you.</p>'
+      +'<h3>Copyright / takedown</h3><p>We respect rights holders. If you believe a title is not actually public domain, see our <a href="/dmca">takedown page</a> — we act fast and remove first, verify after.</p>'
+      +'<h3>Changes</h3><p>We may update these Terms. Continued use after changes means you accept the revised Terms.</p></div>';
   } else if(which==='privacy'){
     app.innerHTML='<div class="legal"><h2>Privacy</h2>'
       +'<p class="muted">Last updated June 2026.</p>'
@@ -1657,6 +1929,7 @@ function route(){
   if(p.startsWith('/person/'))return personPage(decodeURIComponent(p.slice(8)));
   if(p.startsWith('/u/'))return profilePage(decodeURIComponent(p.slice(3)));
   if(p==='/diary')return diaryPage();
+  if(p==='/stats')return statsPage();
   if(p==='/club')return clubPage();
   if(p==='/parties')return partiesPage();
   if(p.startsWith('/party/'))return partyRoom(decodeURIComponent(p.slice(7)));
@@ -1670,23 +1943,34 @@ let st;$('#q').addEventListener('input',e=>{clearTimeout(st);const v=e.target.va
 $('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();if(v)searchPage(v);}});
 
 function showClickwrap(){
-  try{ if(localStorage.getItem('bbx_consent_v1')) return; }catch(e){ return; }
-  const w=el('div','cw');
-  const bar=el('div','cwbar');
-  bar.innerHTML='<p>🎬 <b>Welcome to Blueboxd.</b> We stream <b>public-domain</b> films straight from the Internet Archive — we host no video, run no ads, and never sell your data. Your diary lives in your own Bluesky repo. By continuing you agree to our <a href="/tos">Terms</a> &amp; <a href="/privacy">Privacy</a>.</p>';
-  const row=el('div','row');
-  const ok=el('button','btn acc','Got it — enter');
-  const learn=el('button','btn','Read the terms');
-  ok.onclick=()=>{try{localStorage.setItem('bbx_consent_v1',Date.now());}catch(e){} jpost('/api/consent',{v:'v1'}).catch(()=>{}); w.remove();};
-  learn.onclick=()=>{w.remove();go('/tos');};
-  row.append(ok,learn);bar.appendChild(row);w.appendChild(bar);document.body.appendChild(w);
+  try{ if(localStorage.getItem('bbx_gate_v2')) return; }catch(e){ return; }
+  const w=el('div','gate');
+  const box=el('div','gatebox');
+  box.innerHTML=
+    '<div class="gatehd"><div class="gatelogo">\uD83C\uDFAC</div><h2>Welcome to Blueboxd</h2>'+
+    '<p class="gatesub">A Bluesky film club for public-domain cinema. Before you enter, please confirm:</p></div>'+
+    '<div class="gatebody">'+
+      '<ul class="gatelist">'+
+        '<li><b>You are 18 or older.</b> This is an adult-access site. Films are vintage public-domain works and may contain mature, dated, or historically sensitive content.</li>'+
+        '<li><b>The films are third-party content.</b> Every title streams directly from the Internet Archive (archive.org). Blueboxd hosts no video, controls no content, and is <b>not responsible</b> for material provided by archive.org. Public-domain status is presented in good faith and is not legal advice.</li>'+
+        '<li><b>Provided \u201cas is.\u201d</b> The service is offered without warranties of any kind. You use it <b>at your own risk</b>. To the maximum extent permitted by law, Blueboxd and its operator are not liable for any damages arising from your use of the site or any content, and you agree to hold them harmless.</li>'+
+        '<li><b>Rights holders:</b> request removal anytime via our <a href="/dmca" target="_blank" rel="noopener">Takedown</a> page \u2014 we honor valid notices.</li>'+
+      '</ul>'+
+      '<label class="gatecheck"><input type="checkbox" id="gateck"> <span>I am <b>18 or older</b> and I have read and agree to the <a href="/tos" target="_blank" rel="noopener">Terms</a>, <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>, and the disclaimer above.</span></label>'+
+    '</div>'+
+    '<div class="gatebtns"><button class="btn acc" id="gateok" disabled>I Agree \u2014 Enter</button><button class="btn" id="gateno">Leave</button></div>';
+  w.appendChild(box);document.body.appendChild(w);
+  const ck=box.querySelector('#gateck'),ok=box.querySelector('#gateok'),no=box.querySelector('#gateno');
+  ck.addEventListener('change',()=>{ok.disabled=!ck.checked;});
+  ok.onclick=()=>{if(!ck.checked)return;try{localStorage.setItem('bbx_gate_v2',Date.now());}catch(e){} jpost('/api/consent',{v:'gate-v2',age18:true}).catch(()=>{}); w.remove();};
+  no.onclick=()=>{location.href='https://archive.org/details/feature_films';};
 }
 (async()=>{try{ME=await jget('/api/me');if(ME.loggedIn&&ME.handle){try{const _pr=await jget('/api/profile?handle='+encodeURIComponent(ME.handle));if(_pr&&_pr.profile){ME.avatar=_pr.profile.avatar;ME.displayName=_pr.profile.displayName;}}catch(e){}};}catch(e){}authSlot();route();showClickwrap();})();
 </script>
 </body></html>`;
 
 // worker.js
-var APP_ID = "69a76ce1b110c1c0c8c86855";
+var APP_ID = "YOUR_BASE44_APP_ID"; // your Base44 app id hosting the /cinevault catalog function
 var CATALOG_API = `https://base44.app/api/apps/${APP_ID}/functions/cinevault`;
 var SCOPE = "atproto transition:generic";
 var SESSION_TTL = 60 * 60 * 24 * 14;
@@ -1781,13 +2065,124 @@ async function fetchFollows(sess) {
   }
   return dids;
 }
+
+// ── Shared rail master builder: de-dupe (by id + variant) + per-genre curation.
+// Cached under hc:railmaster2:<id>. Used by /api/rail AND the home featured rail.
+async function buildRailMaster(env, id) {
+  const mk = "hc:railmaster2:" + id;
+  let master = await env.CC_KV.get(mk, "json");
+  if (master) return master;
+  const full = await catalog("rail", { id, rows: 500 });
+  // Poisoned archive items: filename says one film, metadata resolves to another.
+  // Drop them so they can never headline a rail. (e.g. doa_ipod -> "The Wizard of Oz")
+  const BAD_IDS = new Set(["doa_ipod"]);
+  const seen = new Set();
+  const byId = [];
+  for (const f of (full && Array.isArray(full.docs) ? full.docs : [])) {
+    const fid = f && f.id;
+    if (!fid || seen.has(fid) || BAD_IDS.has(fid)) continue;
+    seen.add(fid);
+    byId.push(f);
+  }
+  const nkey = (f) => {
+    let t = String(f.title || "").toLowerCase();
+    t = t.replace(/\(\s*\d{4}\s*\)/g, " ");
+    t = t.replace(/\b(?:19|20)\d{2}\b/g, " ");
+    t = t.replace(/[^a-z0-9 ]+/g, " ");
+    t = t.replace(/\b(?:the|a|an|of|and|de|le|la)\b/g, " ");
+    t = t.replace(/\b(?:full|movie|film|hd|hq|restored|remastered|color|colour|colorized|colourized|complete|version|public|domain|avi|mp4|mkv|720p|1080p|ipod|subtitles?|subtitled|subbed|subs|english|engsubs?|with)\b/g, " ");
+    t = t.replace(/\s+/g, " ").trim();
+    const y = f.year ? String(f.year) : "";
+    return t ? (t + "|" + y) : ("id:" + f.id);
+  };
+  const better = (a, b) => {
+    const ap = a.poster ? 1 : 0, bp = b.poster ? 1 : 0;
+    if (ap !== bp) return ap > bp ? a : b;
+    const al = (a.blurb || "").length, bl = (b.blurb || "").length;
+    if (Math.abs(al - bl) > 40) return al > bl ? a : b;
+    const ad = Number(a.downloads || 0), bd = Number(b.downloads || 0);
+    return ad >= bd ? a : b;
+  };
+  const clusters = new Map();
+  const order = [];
+  for (const f of byId) {
+    const k = nkey(f);
+    if (clusters.has(k)) { clusters.set(k, better(clusters.get(k), f)); }
+    else { clusters.set(k, f); order.push(k); }
+  }
+  const docs = order.map((k) => clusters.get(k));
+  master = { label: (full && full.label) || id, total: docs.length, docs };
+  if (id === "noir") {
+    master.label = "\uD83C\uDF03 Noir City";
+    const NOIR_HEAD = [
+      "scarlet street","detour","the killers","laura","d o a","d.o.a","doa",
+      "kiss me deadly","the big heat","gilda","this gun for hire","the killing",
+      "shadow of a doubt","the stranger","the lost weekend","quicksand","kansas city confidential",
+      "the red house","the chase","he walked by night","the glass key","spellbound"
+    ];
+    const norm = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+    const headMatch = (f) => {
+      const n = norm(f.title);
+      for (let i = 0; i < NOIR_HEAD.length; i++) { if (n === NOIR_HEAD[i] || n.indexOf(NOIR_HEAD[i] + " ") === 0) return NOIR_HEAD[i]; }
+      return null;
+    };
+    // Targeted canonical merge: one best copy per head-classic (kills credit-laden dupes).
+    {
+      const headBest = new Map();   // head phrase -> best film
+      const rest = [];
+      for (const f of master.docs) {
+        const h = headMatch(f);
+        if (h) {
+          const cur = headBest.get(h);
+          if (!cur) headBest.set(h, f);
+          else {
+            const cp = cur.poster ? 1 : 0, fp = f.poster ? 1 : 0;
+            const cd = Number(cur.downloads || 0), fd = Number(f.downloads || 0);
+            if (fp > cp || (fp === cp && fd > cd)) headBest.set(h, f);
+          }
+        } else rest.push(f);
+      }
+      // Clean display titles for the head classics (cards read crisp on the marquee).
+      const PRETTY = {
+        "scarlet street":"Scarlet Street (1945)","detour":"Detour (1945)","the killers":"The Killers (1946)",
+        "laura":"Laura (1944)","d o a":"D.O.A. (1950)","kiss me deadly":"Kiss Me Deadly (1955)",
+        "the big heat":"The Big Heat (1953)","gilda":"Gilda (1946)","this gun for hire":"This Gun for Hire (1942)",
+        "the killing":"The Killing (1956)","shadow of a doubt":"Shadow of a Doubt (1943)","the stranger":"The Stranger (1946)",
+        "the lost weekend":"The Lost Weekend (1945)","quicksand":"Quicksand (1950)","kansas city confidential":"Kansas City Confidential (1952)",
+        "the red house":"The Red House (1947)","the chase":"The Chase (1946)","he walked by night":"He Walked by Night (1948)",
+        "the glass key":"The Glass Key (1942)","spellbound":"Spellbound (1945)"
+      };
+      for (const [h, f] of headBest.entries()) { if (PRETTY[h]) f.title = PRETTY[h]; }
+      master.docs = [...headBest.values(), ...rest];
+      master.total = master.docs.length;
+    }
+    const score = (f) => {
+      const n = norm(f.title);
+      for (let i = 0; i < NOIR_HEAD.length; i++) { if (n.indexOf(NOIR_HEAD[i]) === 0 || n === NOIR_HEAD[i]) return i; }
+      return 999;
+    };
+    master.docs = master.docs.slice().sort((a, b) => {
+      const sa = score(a), sb = score(b);
+      if (sa !== sb) return sa - sb;
+      return Number(b.downloads || 0) - Number(a.downloads || 0);
+    });
+  }
+  if (docs.length) { try { await env.CC_KV.put(mk, JSON.stringify(master), { expirationTtl: 900 }); } catch (e) {} }
+  return master;
+}
+async function buildNoirMaster(env) { return buildRailMaster(env, "noir"); }
+
 async function catalog(action, params = {}) {
   const r = await fetch(CATALOG_API, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ action, ...params }),
-    cf: { cacheTtl: 300, cacheEverything: true }
+    body: JSON.stringify({ action, ...params })
   });
+  // cinevault returns 404 for deny/unverified films BY DESIGN — pass that JSON through
+  // (it carries {error:"unverified",verified:false}). Only treat 5xx / network as failure.
+  if (r.status === 404) {
+    try { return await r.json(); } catch (e) { return { error: "unverified", verified: false }; }
+  }
   if (!r.ok) throw new Error(`catalog ${action} ${r.status}`);
   return r.json();
 }
@@ -2069,13 +2464,49 @@ var worker_default = {
         }, 200, { "cache-control": "no-store" });
       }
       if (path === "/api/home") {
+        const hk = "hc:home";
+        const hit = await env.CC_KV.get(hk, "json");
+        if (hit) return json(hit, 200, { "cache-control": "public, max-age=120", "x-bbx-cache": "hit" });
         const data = await catalog("home");
-        return json(data, 200, { "cache-control": "public, max-age=120" });
+        if (data && Array.isArray(data.rails)) {
+          data.rails = data.rails.map(rl => {
+            const docs = rl.docs || rl.films || [];
+            return { ...rl, docs, total: (typeof rl.total === "number" ? rl.total : docs.length) };
+          });
+          // FEATURED: Noir City marquee at the top of home. Reuse the deduped + curated
+          // noir master (built by /api/rail logic, cached under hc:railmaster2:noir).
+          try {
+            const nm = await buildNoirMaster(env);
+            if (nm && Array.isArray(nm.docs) && nm.docs.length) {
+              data.featured = {
+                id: "noir",
+                label: "\uD83C\uDF03 Noir City",
+                tagline: "Saturday night at the movies \u2014 hand-picked shadows, venetian blinds & the genre that defined cool.",
+                total: nm.total,
+                docs: nm.docs.slice(0, 18)
+              };
+            }
+          } catch (e) {}
+          // only cache a healthy payload (rails present and non-empty)
+          if (data.rails.length && data.rails.some(rl => (rl.docs || []).length)) {
+            try { await env.CC_KV.put(hk, JSON.stringify(data), { expirationTtl: 600 }); } catch (e) {}
+          }
+        }
+        return json(data, 200, { "cache-control": "public, max-age=120", "x-bbx-cache": "miss" });
       }
       if (path === "/api/rail") {
+        // Page-aware + de-duplicated genre browse.
+        // ROOT FIX: frontend paginates with &page=N, but upstream ignored it and
+        // re-served the same slice -> visible dupes on infinite scroll. We now
+        // build ONE de-duped master list per genre (cached), then slice by page.
         const id = url.searchParams.get("id");
-        const rows = url.searchParams.get("rows") || "24";
-        return json(await catalog("rail", { id, rows: Number(rows) }), 200, { "cache-control": "public, max-age=300" });
+        const rows = Math.min(parseInt(url.searchParams.get("rows") || "60", 10) || 60, 120);
+        const page = Math.max(parseInt(url.searchParams.get("page") || "1", 10) || 1, 1);
+        const master = await buildRailMaster(env, id);
+        const start = (page - 1) * rows;
+        const slice = ((master && master.docs) || []).slice(start, start + rows);
+        const out = { label: (master && master.label) || id, total: (master && master.total) || 0, page, rows, docs: slice };
+        return json(out, 200, { "cache-control": "public, max-age=300", "x-bbx-cache": "master" });
       }
       if (path === "/api/person") {
         const id = url.searchParams.get("id");
@@ -2088,7 +2519,118 @@ var worker_default = {
       if (path === "/api/detail") {
         const id = url.searchParams.get("id");
         const source = url.searchParams.get("source") || "archive";
-        return json(await catalog("detail", { id, source }), 200, { "cache-control": "public, max-age=600" });
+        const det = await catalog("detail", { id, source });
+        try {
+          if (det && !det.error && id) {
+            const ov = await env.CC_KV.get("art:" + id, "json");
+            if (ov && ov.poster) det.poster = ov.poster;
+            if (ov && ov.backdrop) det.backdrop = ov.backdrop;
+          }
+        } catch (e) {}
+        // WALLED GARDEN: browsing stays open (title, poster, synopsis), but the
+        // actual stream is withheld unless the visitor has a valid Bluesky session.
+        // This walls playback at the API layer, not just the UI.
+        try {
+          const _sess = await loadSession(request, env);
+          if (!_sess && det && !det.error) {
+            det.locked = true;
+            det.streamUrl = null;
+            det.streams = undefined;
+          }
+        } catch (e) {}
+        // Per-visitor gating => do NOT shared-cache the stream URL.
+        return json(det, 200, { "cache-control": "private, max-age=0, no-store" });
+      }
+      if (path === "/api/portrait") {
+        // Portrait proxy for cinevault people-rails (function lacks a TMDb key). KV-cached 30d.
+        const name = (url.searchParams.get("name") || "").trim();
+        if (!name) return json({ ok: false });
+        if (!env.TMDB_API_KEY) return json({ ok: false });
+        const ck = "pt:" + name.toLowerCase();
+        const cached = await env.CC_KV.get(ck, "json");
+        if (cached) return json(cached, 200, { "cache-control": "public, max-age=86400" });
+        try {
+          const pu = new URL("https://api.themoviedb.org/3/search/person");
+          pu.searchParams.set("query", name);
+          pu.searchParams.set("include_adult", "false");
+          const pr = await fetch(pu.toString(), { headers: { Authorization: "Bearer " + env.TMDB_API_KEY } });
+          if (!pr.ok) return json({ ok: false });
+          const pj = await pr.json();
+          const hit = (pj.results || []).find(x => x && x.profile_path) || null;
+          const out = hit
+            ? { ok: true, portrait: "https://image.tmdb.org/t/p/w300" + hit.profile_path }
+            : { ok: false };
+          await env.CC_KV.put(ck, JSON.stringify(out), { expirationTtl: 60*60*24*30 });
+          return json(out, 200, { "cache-control": "public, max-age=86400" });
+        } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
+      }
+      if (path === "/api/tmdb-verify") {
+        // Catalog-verification proxy for the cinevault function (which lacks a TMDb key).
+        // Returns {poster, overview, tmdbId, tmdbTitle} or {ok:false}. KV-cached 7d.
+        const q = (url.searchParams.get("q") || "").trim();
+        const yr = url.searchParams.get("year") || "";
+        if (!q) return json({ ok: false });
+        if (!env.TMDB_API_KEY) return json({ ok: false });
+        const ck = "tv2:" + q.toLowerCase() + ":" + yr;
+        const cached = await env.CC_KV.get(ck, "json");
+        if (cached) return json(cached, 200, { "cache-control": "public, max-age=600" });
+        try {
+          const tu = new URL("https://api.themoviedb.org/3/search/movie");
+          tu.searchParams.set("query", q); if (yr) tu.searchParams.set("year", yr);
+          tu.searchParams.set("include_adult", "false");
+          const tr = await fetch(tu.toString(), { headers: { Authorization: "Bearer " + env.TMDB_API_KEY } });
+          if (!tr.ok) { return json({ ok: false }); }
+          const tj = await tr.json();
+          const hit = (tj.results || []).find(m => m && m.poster_path && typeof m.overview === "string" && m.overview.trim().length >= 20 && !m.adult) || null;
+          if (!hit) { const miss = { ok: false }; await env.CC_KV.put(ck, JSON.stringify(miss), { expirationTtl: 60*60*24*7 }); return json(miss, 200, { "cache-control": "public, max-age=600" }); }
+          const tmdbYear = (typeof hit.release_date === "string" && hit.release_date.length >= 4) ? parseInt(hit.release_date.slice(0,4)) : null;
+          const out = { ok: true, poster: "https://image.tmdb.org/t/p/w500" + hit.poster_path, overview: String(hit.overview).slice(0, 1200), tmdbId: hit.id, tmdbTitle: hit.title || hit.original_title || q, tmdbYear };
+          await env.CC_KV.put(ck, JSON.stringify(out), { expirationTtl: 60*60*24*7 });
+          return json(out, 200, { "cache-control": "public, max-age=600" });
+        } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
+      }
+      if (path === "/api/images") {
+        const tmdbId = Number(url.searchParams.get("tmdb") || 0);
+        if (!tmdbId) return json({ posters: [], backdrops: [] });
+        const key = "img:" + tmdbId;
+        const cached = await env.CC_KV.get(key, "json");
+        if (cached) return json(cached, 200, { "cache-control": "public, max-age=600" });
+        if (!env.TMDB_API_KEY) return json({ posters: [], backdrops: [] });
+        try {
+          const iu = new URL("https://api.themoviedb.org/3/movie/" + tmdbId + "/images");
+          iu.searchParams.set("include_image_language", "en,null");
+          const ir = await fetch(iu.toString(), { headers: { Authorization: "Bearer " + env.TMDB_API_KEY } });
+          if (!ir.ok) return json({ posters: [], backdrops: [] });
+          const ij = await ir.json();
+          const map = (arr, small, full, cap) => (arr || [])
+            .filter(x => x && x.file_path)
+            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+            .slice(0, cap)
+            .map(x => ({ thumb: small + x.file_path, full: full + x.file_path }));
+          const out = {
+            tmdbId,
+            posters: map(ij.posters, "https://image.tmdb.org/t/p/w185", "https://image.tmdb.org/t/p/w500", 24),
+            backdrops: map(ij.backdrops, "https://image.tmdb.org/t/p/w300", "https://image.tmdb.org/t/p/w780", 18)
+          };
+          await env.CC_KV.put(key, JSON.stringify(out), { expirationTtl: 60 * 60 * 24 * 7 });
+          return json(out, 200, { "cache-control": "public, max-age=600" });
+        } catch (e) {
+          return json({ posters: [], backdrops: [], error: String(e.message || e) });
+        }
+      }
+      if (path === "/api/artwork" && request.method === "POST") {
+        const sess = await loadSession(request, env);
+        if (!sess) return json({ error: "auth" }, 401);
+        if (sess.did !== OWNER_DID) return json({ error: "owner only" }, 403);
+        const b = await request.json();
+        const fid = String(b.filmId || "");
+        if (!fid) return json({ error: "missing filmId" }, 400);
+        if (b.reset) { await env.CC_KV.delete("art:" + fid); return json({ ok: true, reset: true }); }
+        const ov = {};
+        if (b.poster) ov.poster = String(b.poster);
+        if (b.backdrop) ov.backdrop = String(b.backdrop);
+        await env.CC_KV.put("art:" + fid, JSON.stringify(ov));
+        return json({ ok: true, art: ov });
       }
       if (path === "/api/library" && request.method === "POST") {
         const sess = await loadSession(request, env);
@@ -2268,7 +2810,7 @@ ${sess.origin}/film/${encodeURIComponent(filmId)}
         out.favorites = (out.favorite||[]).map(r=>r.value).sort((a,b)=>(a.slot||0)-(b.slot||0));
         return json(out, 200, { "cache-control": "public, max-age=30" });
       }
-      if (path === "/" || path.startsWith("/film/") || path.startsWith("/u/") || path.startsWith("/person/") || path.startsWith("/genre/") || path === "/about" || path === "/diary" || path === "/club" || path === "/parties" || path.startsWith("/party/") || path === "/tos" || path === "/privacy" || path === "/dmca") {
+      if (path === "/" || path.startsWith("/film/") || path.startsWith("/u/") || path.startsWith("/person/") || path.startsWith("/genre/") || path === "/about" || path === "/diary" || path === "/stats" || path === "/club" || path === "/parties" || path.startsWith("/party/") || path === "/tos" || path === "/privacy" || path === "/dmca") {
         return html(SHELL_HTML(origin));
       }
       return json({ error: "not found" }, 404);
