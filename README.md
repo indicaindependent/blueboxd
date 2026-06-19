@@ -1,142 +1,64 @@
-<div align="center">
-
 # 📺 Blueboxd
 
-### Free public-domain cinema, with a film diary that lives in *your* Bluesky account.
+**A Bluesky film club for public-domain cinema.** Free, ad-free, and fully portable — your film diary, ratings, and reviews live in *your own* AT Protocol repo, not ours.
 
-**A Letterboxd-style social layer for classic film — built on the AT Protocol.**
-No accounts to create. No ads. No tracking. No video hosted by us.
+> Watch classic public-domain films, log them to your Bluesky identity, host live watch parties, and climb a community leaderboard. No paywalls, no tracking, no separate account.
 
-[**Live → blueboxd.com**](https://blueboxd.com) · [Mirror → cineclub.osintnet.uk](https://cineclub.osintnet.uk) · [@blueboxd.bsky.social](https://bsky.app/profile/blueboxd.bsky.social)
-
-</div>
+Live at **[blueboxd.com](https://blueboxd.com)**.
 
 ---
 
 ## What is this?
 
-**Blueboxd** streams hand-curated public-domain films straight from the [Internet Archive](https://archive.org) — film noir, classic horror, golden-age comedy, sci-fi, and more — and pairs them with a **Letterboxd-style social layer that writes to your own Bluesky repo.**
+Blueboxd is a single [Cloudflare Worker](https://workers.cloudflare.com/) that powers an entire Letterboxd-style film club on top of [Bluesky](https://bsky.app) and the [AT Protocol](https://atproto.com). Films stream directly from the [Internet Archive](https://archive.org) — Blueboxd hosts no video and controls no content.
 
-Your watch diary, ratings, reviews, and favorites aren't locked in our database. They're stored as records in **your** Personal Data Server via the AT Protocol — fully portable, yours forever, readable by any atproto app. We host **zero video**: every stream comes directly from archive.org's public-domain collection.
-
-It runs as a **single Cloudflare Worker** at the edge. One file, no build step, no framework.
-
-> **One differentiator:** your film identity is data you own — not a profile we rent to you.
-
----
+The twist: **there is no Blueboxd database for your data.** Your diary entries, ratings, reviews, and watchlist are written as records into *your own* atproto repo via OAuth. Delete your account on Blueboxd and you keep everything — it's yours, portable, forever.
 
 ## Features
 
-- 🎞️ **Curated public-domain catalog** — 6 hand-tuned channels (Film Noir, Classic Horror, Sci-Fi, Golden-Age Comedy, Carnival & Circus, Prison Block) sourced live from the Internet Archive
-- 🎭 **Browse by star & director** — TMDB-portrait rails for 40+ classic-era names (Bogart, Stanwyck, Lang, Wilder...)
-- 📔 **Portable film diary** — watches, ratings, and reviews written to **your** Bluesky PDS via AT Protocol
-- 🍿 **The club is watching** — a live community feed of what members are watching, built from public atproto records
-- 🔴 **Watch-party discovery** — surfaces real #TCMParty / #FilmSky / #NoirAlley threads buzzing on Bluesky right now (read-only — we surface the buzz, we never spam it)
-- 🦋 **Bluesky OAuth** — log in with the account you already have; no new password
-- ⚖️ **Legal-first** — clickwrap consent, DMCA takedown flow, public-domain-only sourcing, observability for playback health
-- ⚡ **Edge-native** — a single Cloudflare Worker, D1 for telemetry, KV for caching. Cold-starts in milliseconds.
-
----
+- 🎬 **Public-domain catalogue** — thousands of vintage films (noir, sci-fi, horror, westerns, musicals…) verified against a real film database and streamed legally from archive.org.
+- 📔 **atproto-native diary** — ratings, reviews, watchlist, and "in library" all saved to *your* Bluesky repo via OAuth. No password ever touches Blueboxd.
+- 🎉 **Live watch parties** — scheduled group screenings with a countdown hero, RSVP, a synced player that unlocks at showtime, and live reactions mirrored from the Bluesky thread.
+- 🏆 **Leaderboard** — weekly community ranking by films watched, with snapshots.
+- 🦋 **Shareable cards** — every diary, stats, party, and leaderboard view generates a clickable Bluesky link-preview card that drives fans back into the room.
+- 👤 **Person pages** — browse by star or director with full, de-duplicated filmographies.
 
 ## Architecture
 
 ```
-                    +-----------------------------+
-   Bluesky user --->|   Cloudflare Worker (edge)  |
-   (OAuth login)    |   cineclub_bundled.js       |
-                    |                             |
-                    |  - SPA shell + client render|
-                    |  - /api/home   catalog rails|
-                    |  - /api/detail  stream lookup|
-                    |  - /api/discovery party feed|
-                    |  - OAuth + session handling |
-                    +------+--------------+-------+
-                           |              |
-              +------------+              +-------------+
-              v                                         v
-   +--------------------+                  +------------------------+
-   |  Internet Archive  |                  |  Your Bluesky PDS      |
-   |  (public-domain    |                  |  (diary / ratings /    |
-   |   video streams)   |                  |   reviews -- you own)  |
-   +--------------------+                  +------------------------+
-              |                                         |
-              v                                         v
-   +--------------------+                  +------------------------+
-   |  TMDB (portraits + |                  |  D1 + KV (telemetry,   |
-   |   poster metadata) |                  |   caching, consent log)|
-   +--------------------+                  +------------------------+
+                    ┌─────────────────────────────┐
+   blueboxd.com ───▶│   Cloudflare Worker          │
+                    │   (this repo — worker.js)    │
+                    ├─────────────────────────────┤
+   archive.org  ◀───┤  • catalogue + streaming     │
+   (films)          │  • watch parties + rooms     │
+                    │  • leaderboard + snapshots   │
+   Bluesky /    ◀───┤  • share-card rendering      │
+   AT Protocol      │  • OAuth → user's own repo   │──▶ your atproto repo
+   (your diary)     └─────────────────────────────┘    (diary, ratings, reviews)
+                              │
+                    KV  ·  D1 (social index)
 ```
 
-**No origin server. No video on our infra. Your social graph is yours.**
-
----
+Everything runs at the edge in one Worker. State lives in Cloudflare KV (caches, sessions) and D1 (the social/watch index) — **never** the user's film data, which is atproto-only.
 
 ## Self-hosting
 
-Blueboxd is a single Cloudflare Worker. To run your own instance:
+You'll need a Cloudflare account, a Bluesky account to act as the host, and Node.
 
-```bash
-git clone https://github.com/indicaindependent/blueboxd.git
-cd blueboxd
-npm i -g wrangler
-cp wrangler.example.toml wrangler.toml   # then fill in your IDs
-```
+1. Bind a KV namespace, a D1 database, and your secrets/vars:
+   - `OWNER_DID_ENV` — the DID of your host/owner Bluesky account
+   - OAuth client config + a host app-password (as Worker secrets, **never** hardcoded)
+2. Set `OWNER_DID` / `HOST_HANDLE` in `worker.js` (or via the env var) to your account.
+3. Deploy `worker.js` to your Worker and point your domain at it.
+4. The `.mjs` helpers post the scheduled cadence cards (Saturday party, weekly leaderboard, diary share).
 
-**1. Create the bindings** (KV + D1):
-
-```bash
-wrangler kv namespace create CC_KV
-wrangler d1 create blueboxd-social
-```
-
-Paste the returned IDs into `wrangler.toml`.
-
-**2. Set your owner identity** -- edit the two placeholders near the top of `cineclub_bundled.js`:
-
-```js
-var OWNER_DID = "did:plc:YOUR_OWNER_DID";   // your Bluesky host/owner account DID
-var HOST_PDS  = "https://YOUR-PDS.host.bsky.network";  // your PDS endpoint
-```
-
-**3. Set secrets** (never commit these):
-
-```bash
-wrangler secret put BLUEBOXD_APP_PASSWORD   # host account app-password
-wrangler secret put SESSION_SECRET
-wrangler secret put CLIENT_PRIVATE_JWK      # OAuth client key
-# optional alerting:
-wrangler secret put SCRAMBLEMEBOT_TOKEN
-wrangler secret put PETE_CHAT_ID
-```
-
-**4. Deploy:**
-
-```bash
-wrangler deploy
-```
-
-That's it -- no build pipeline, no node_modules in production. The entire app is `cineclub_bundled.js`.
-
----
-
-## Legal & ethics
-
-Blueboxd streams **only public-domain works** sourced from the Internet Archive. We host no video and store no copyrighted media. A [DMCA takedown flow](https://blueboxd.com/dmca) is built in, and first-visit consent is logged. If you believe something is mis-categorized, use the in-app takedown form.
-
----
+> **Security note:** all tokens, app-passwords, and OAuth secrets are read from Worker secret bindings. There are no secrets in this source, and there never should be — see [SECURITY.md](SECURITY.md).
 
 ## License
 
-[MIT](LICENSE) (c) Indica Independent / VPDLNY
+[MIT](LICENSE) © indicaindependent
 
 ---
 
-<div align="center">
-
-Part of the **[Indica Independent](https://osintnet.uk)** open-tools stack -- OSINT-grade software for the people Wall Street and Big Tech ignore.
-
-[osintnet.uk](https://osintnet.uk) · [WarHeatMap](https://github.com/indicaindependent/warheatmap) · [Tuck](https://github.com/indicaindependent/tuck) · [Strait Tracker](https://github.com/indicaindependent/straittracker)
-
-*Built at the edge. Owned by you.* 📺
-
-</div>
+*Part of the [Indica Independent](https://github.com/indicaindependent) stack. Public-domain cinema, streamed free & legal.*
