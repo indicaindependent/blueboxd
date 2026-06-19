@@ -3,6 +3,26 @@
 All notable changes to Blueboxd are documented here.
 This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.3.0] - 2026-06-19
+
+### Added
+- **Watch Parties — Phase A (discovery hero).** Poster-backed hero card with a live countdown, RSVP avatar strip, "I'm in" / "Open room" CTAs, and a recaps-and-replays rail of past parties.
+- **Watch Parties — Phase C (room polish).** Host avatar resolved from the host's Bluesky profile, an escalating urgency pill ("Starting soon" → "Showtime in…"), and an ambient empty-state so a fresh room never looks dead.
+- **Clickable share cards** across diary, stats, movies, reviews, party, and leaderboard — every shared image is now a tappable Bluesky link-preview that points back to the room.
+- **About page** with a values block and mobile-friendly layout.
+- **Leaderboard** entry points added to the header and the profile menu.
+- **Dark-mode header buttons** — the white header action buttons now invert correctly under the dark theme.
+
+### Changed
+- Diary and Stats rebuilt to a Letterboxd-grade interface: interactive star ratings, per-row remove buttons, sort + debounced search, animated count-up metrics, and taste-profile cards.
+- Header buttons adopt a featured gradient; the "Club" button is replaced by a featured **Leaderboard** button. "Owned" → "In Library", "Want" → "Watchlist".
+- Person pages de-duplicate by TMDb ID and load full filmographies via an archive.org proxy to dodge throttling.
+- AI-generated diary/stats share blurbs (Cloudflare Workers AI) replace boilerplate share text.
+
+### Fixed
+- "Could not save" write errors caused by a concurrent OAuth token-refresh race.
+- Person-page "0 films" bug and blank-poster bug in Recently Watched.
+
 ## [1.1.1] - 2026-06-12
 
 ### Fixed
