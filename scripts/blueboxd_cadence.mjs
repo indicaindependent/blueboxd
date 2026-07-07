@@ -1,7 +1,7 @@
 // blueboxd_cadence.mjs — OptiPlex-native cadence poster (replaces Base44 automations).
 // Builds the URL + human copy for a given cadence slot, then calls blueboxd_card_post.mjs.
 // Usage: node blueboxd_cadence.mjs <leaderboard|grid|pick|diary|party>
-// Env: BLUEBOXD_APP_PASSWORD (in /home/ptsdpete/blueboxd/.env)
+// Env: BLUEBOXD_APP_PASSWORD (set in your local .env)
 // No LLM — pure scripted copy with light rotation so it stays human + varied.
 
 import { execFileSync } from "node:child_process";
