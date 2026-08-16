@@ -10,7 +10,7 @@ Live at **[blueboxd.com](https://blueboxd.com)**.
 
 ## What is this?
 
-Blueboxd is a single [Cloudflare Worker](https://workers.cloudflare.com/) that powers an entire Letterboxd-style film club on top of [Bluesky](https://bsky.app) and the [AT Protocol](https://atproto.com). Films stream directly from the [Internet Archive](https://archive.org) — Blueboxd hosts no video and controls no content.
+Blueboxd is a single [Cloudflare Worker](https://workers.cloudflare.com/) that powers an entire Letterboxd-style film club — plus a retro TV Hub of always-on channels — on top of [Bluesky](https://bsky.app) and the [AT Protocol](https://atproto.com). Films stream directly from the [Internet Archive](https://archive.org) — Blueboxd hosts no video and controls no content.
 
 The twist: **there is no Blueboxd database for your data.** Your diary entries, ratings, reviews, and watchlist are written as records into *your own* atproto repo via OAuth. Delete your account on Blueboxd and you keep everything — it's yours, portable, forever.
 
@@ -22,6 +22,7 @@ The twist: **there is no Blueboxd database for your data.** Your diary entries, 
 - 🏆 **Leaderboard** — weekly community ranking by films watched, with snapshots.
 - 🦋 **Shareable cards** — every diary, stats, party, and leaderboard view generates a clickable Bluesky link-preview card that drives fans back into the room.
 - 👤 **Person pages** — browse by star or director with full, de-duplicated filmographies.
+- 📺 **TV Hub** — a retro broadcast experience: tune into always-on channels (a classic-film channel and a cartoon "Toon Town" channel) that play curated public-domain line-ups like old-school TV, no picking required.
 
 ## Architecture
 
@@ -32,6 +33,7 @@ The twist: **there is no Blueboxd database for your data.** Your diary entries, 
                     ├─────────────────────────────┤
    archive.org  ◀───┤  • catalogue + streaming     │
    (films)          │  • watch parties + rooms     │
+                    │  • TV Hub channels (film/toon) │
                     │  • leaderboard + snapshots   │
    Bluesky /    ◀───┤  • share-card rendering      │
    AT Protocol      │  • OAuth → user's own repo   │──▶ your atproto repo
