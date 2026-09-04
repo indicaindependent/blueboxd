@@ -1,4 +1,4 @@
-# 📺 Blueboxd
+# Blueboxd
 
 **A Bluesky film club for public-domain cinema.** Free, ad-free, and fully portable — your film diary, ratings, and reviews live in *your own* AT Protocol repo, not ours.
 
@@ -16,13 +16,13 @@ The twist: **there is no Blueboxd database for your data.** Your diary entries, 
 
 ## Features
 
-- 🎬 **Public-domain catalogue** — thousands of vintage films (noir, sci-fi, horror, westerns, musicals…) verified against a real film database and streamed legally from archive.org.
-- 📔 **atproto-native diary** — ratings, reviews, watchlist, and "in library" all saved to *your* Bluesky repo via OAuth. No password ever touches Blueboxd.
-- 🎉 **Live watch parties** — scheduled group screenings with a countdown hero, RSVP, a synced player that unlocks at showtime, and live reactions mirrored from the Bluesky thread.
-- 🏆 **Leaderboard** — weekly community ranking by films watched, with snapshots.
-- 🦋 **Shareable cards** — every diary, stats, party, and leaderboard view generates a clickable Bluesky link-preview card that drives fans back into the room.
-- 👤 **Person pages** — browse by star or director with full, de-duplicated filmographies.
-- 📺 **TV Hub** — a retro broadcast experience: tune into always-on channels (a classic-film channel and a cartoon "Toon Town" channel) that play curated public-domain line-ups like old-school TV, no picking required.
+- **Public-domain catalogue** — thousands of vintage films (noir, sci-fi, horror, westerns, musicals…) verified against a real film database and streamed legally from archive.org.
+- **atproto-native diary** — ratings, reviews, watchlist, and "in library" all saved to *your* Bluesky repo via OAuth. No password ever touches Blueboxd.
+- **Live watch parties** — scheduled group screenings with a countdown hero, RSVP, a synced player that unlocks at showtime, and live reactions mirrored from the Bluesky thread.
+- **Leaderboard** — weekly community ranking by films watched, with snapshots.
+- **Shareable cards** — every diary, stats, party, and leaderboard view generates a clickable Bluesky link-preview card that drives fans back into the room.
+- **Person pages** — browse by star or director with full, de-duplicated filmographies.
+- **TV Hub** — a retro broadcast experience: tune into always-on channels (a classic-film channel and a cartoon "Toon Town" channel) that play curated public-domain line-ups like old-school TV, no picking required.
 
 ## Architecture
 
@@ -68,11 +68,11 @@ You'll need a Cloudflare account, a Bluesky account to act as the host, and Node
 
 ---
 
-## ⚡ Support the Mission
+## Support the Mission
 
 This is free, ad-free, independent infrastructure — no VC, no gov funding, no strings. If it served you, a tip keeps it alive and funds the next tool.
 
 [![Donate via SkyGive](https://img.shields.io/badge/Donate_via_SkyGive-8A5CF6?style=for-the-badge&logoColor=white)](https://donate.skygive.app/)
 [![Lightning](https://img.shields.io/badge/tips@skygive.app-F7931A?style=for-the-badge&logo=lightning&logoColor=white)](https://donate.skygive.app/)
 
-<sub>🧡 Sovereign Lightning + on-chain via SkyGive. Your sats fund uptime, not ads.</sub>
+<sub> Sovereign Lightning + on-chain via SkyGive. Your sats fund uptime, not ads.</sub>
